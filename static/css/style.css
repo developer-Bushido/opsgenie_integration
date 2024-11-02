@@ -1,0 +1,31 @@
+body {
+    background-color: #f0f2f5;
+}
+
+.fc-daygrid-day.weekend {
+    background-color: #f1f3f5; /* Цвет для выходных */
+}
+
+.fc-event.holiday {
+    background-color: #ffeaa7 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+.fc-event {
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.9em;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+h2 {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+

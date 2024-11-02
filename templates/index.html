@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График дежурств</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center my-4">График дежурств</h2>
+
+    <!-- Таблица с дежурными -->
+    <table class="table table-striped table-bordered text-center mb-4" id="summaryTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Дежурный</th>
+                <th>Рабочие дни</th>
+                <th>Нерабочие дни</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Данные будут загружаться динамически -->
+        </tbody>
+    </table>
+
+    <!-- Календарь FullCalendar -->
+    <div id="calendar"></div>
+</div>
+
+<!-- FullCalendar и Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Инициализация календаря и подгрузка событий -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarElement = document.getElementById('calendar');
+        const summaryTableBody = document.getElementById('summaryTable').querySelector('tbody');
+
+        const calendar = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            locale: 'ru',
+            firstDay: 1,  // Начало недели с понедельника
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth'
+            },
+            dayCellDidMount: function(info) {
+                const day = info.date.getDay();
+                if (day === 0 || day === 6) {
+                    info.el.style.backgroundColor = '#f0f0f0';
+                }
+            },
+            events: function(info, successCallback, failureCallback) {
+                const startDate = new Date(info.start);
+                const endDate = new Date(info.end);
+                const midTime = (startDate.getTime() + endDate.getTime()) / 2;
+                const midDate = new Date(midTime);
+                const year = midDate.getFullYear();
+                const month = midDate.getMonth() + 1;
+
+                fetch(`/get_events?year=${year}&month=${month}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        successCallback(data.events);
+                        updateSummaryTable(data.summary);
+                    })
+                    .catch(error => failureCallback(error));
+            }
+        });
+
+        calendar.render();
+
+        function updateSummaryTable(summaryData) {
+            summaryTableBody.innerHTML = ''; // Очищаем таблицу перед обновлением
+            summaryData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.user}</td>
+                    <td>${item.workdays_count}</td>
+                    <td>${item.holidays_weekends_count}</td>
+                `;
+                summaryTableBody.appendChild(row);
+            });
+        }
+    });
+</script>
+</body>
+</html>
