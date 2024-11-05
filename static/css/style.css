@@ -6,6 +6,10 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+a {
+    text-decoration: none;
+}
+
 h2 {
     margin-top: 20px;
     font-weight: bold;
@@ -31,17 +35,22 @@ h2 {
 
 /* Выходные дни */
 .fc-col-header-cell {
-    background-color: #b7b7b7 !important;
+    background-color: #2c3e50 !important;
+}
+
+.fc-col-header-cell-cushion {
+    color: #fff;
 }
 
 /* Выходные дни */
 .fc-day-sat, .fc-day-sun {
-    background-color: #f6bdbd;
+    background-color: #ffe8a4;
 }
 
 /* Праздничные дни */
 .holiday {
-    background-color: #f6bdbd !important;
+    background-color: #ffe8a4 !important;
+    opacity: 1 !important;
 }
 
 /* События дежурных */
