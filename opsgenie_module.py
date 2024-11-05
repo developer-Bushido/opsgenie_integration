@@ -5,6 +5,7 @@ import requests
 import calendar
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from dateutil import parser
 
 # Load environment variables from .env file
 load_dotenv()
@@ -56,7 +57,7 @@ def get_on_call_schedule(year, month):
 
         filtered_periods = [
             period for period in periods
-            if datetime.fromisoformat(period['endDate'][:-1]) >= month_start and datetime.fromisoformat(period['startDate'][:-1]) <= month_end
+            if parser.isoparse(period['endDate'][:-1]) >= month_start and parser.isoparse(period['startDate'][:-1]) <= month_end
         ]
 
         return filtered_periods
