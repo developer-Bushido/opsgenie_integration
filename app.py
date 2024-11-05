@@ -6,14 +6,22 @@ from opsgenie_module import get_on_call_schedule
 from holidays_module import get_cyprus_holidays
 import calendar
 import colorsys
+from dateutil import parser
 
 app = Flask(__name__)
 
+
 def parse_iso_datetime(s):
     if s.endswith('Z'):
-        return datetime.fromisoformat(s[:-1]).replace(tzinfo=timezone.utc)
-    else:
-        return datetime.fromisoformat(s)
+        s = s[:-1]  # Remove 'Z' for correct processing
+    try:
+        # Use dateutil's isoparse for robust ISO parsing
+        return parser.isoparse(s).replace(tzinfo=timezone.utc)
+    except ValueError:
+        if '.' in s:
+            s = s.rsplit('.', 1)[0]  # Remove fractional seconds
+        return parser.isoparse(s).replace(tzinfo=timezone.utc)
+
 
 def get_on_call_report(year, month):
     schedule = get_on_call_schedule(year, month)
