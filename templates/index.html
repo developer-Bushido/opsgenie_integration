@@ -44,6 +44,13 @@
 
         let dayTypes = {}; // Глобальная переменная для хранения типов дней
 
+        // Получаем сегодняшнюю дату
+        const today = new Date();
+        // Определяем нижний предел - 11 месяцев назад
+        const startLimit = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+        // Определяем верхний предел - 1 год вперёд
+        const endLimit = new Date(today.getFullYear() + 1, today.getMonth());
+
         const calendar = new FullCalendar.Calendar(calendarElement, {
             initialView: 'dayGridMonth',
             locale: 'ru',
@@ -59,20 +66,20 @@
                 week: 'Неделя',
                 day: 'День'
             },
+            validRange: {
+                start: startLimit,  // Начальная дата 11 месяцев назад
+                end: endLimit       // Конечная дата - 1 год вперёд
+            },
             dayCellDidMount: function(info) {
                 const dateStr = info.date.toISOString().split('T')[0];
                 const dayType = dayTypes[dateStr];
 
                 if (dayType === 'Weekend') {
                     info.el.classList.add('weekend');
-                } else if (dayType === 'Weekday') {
-                    // Ничего не делаем, оставляем стандартный фон
                 } else if (dayType) {
                     // Это праздник
                     info.el.classList.add('holiday');
-
-                    // Устанавливаем атрибут title для подсказки
-                    info.el.setAttribute('title', dayType);
+                    info.el.setAttribute('title', dayType); // Подсказка для праздника
                 }
             },
             events: function(info, successCallback, failureCallback) {
