@@ -1,25 +1,9 @@
+/* style.css */
+
+/* Общие стили */
 body {
-    background-color: #f0f2f5;
-}
-
-.fc-daygrid-day.weekend {
-    background-color: #f1f3f5; /* Цвет для выходных */
-}
-
-.fc-event.holiday {
-    background-color: #ffeaa7 !important;
-    color: #000 !important;
-    font-weight: bold;
-}
-
-.fc-event {
-    border-radius: 4px;
-    padding: 4px;
-    font-size: 0.9em;
-}
-
-.container {
-    max-width: 1200px;
+    background-color: #f9fafb;
+    font-family: 'Roboto', sans-serif;
 }
 
 h2 {
@@ -29,3 +13,64 @@ h2 {
     text-align: center;
 }
 
+/* Контейнер календаря */
+#calendar {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #fff;
+    border: 1px solid #474747;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Стили для ячеек дней */
+.fc-daygrid-day-frame {
+    cursor: pointer;
+}
+
+/* Выходные дни */
+.fc-col-header-cell {
+    background-color: #b7b7b7 !important;
+}
+
+/* Выходные дни */
+.fc-day-sat, .fc-day-sun {
+    background-color: #f6bdbd;
+}
+
+/* Праздничные дни */
+.holiday {
+    background-color: #f6bdbd !important;
+}
+
+/* События дежурных */
+.fc-event {
+    border-radius: 4px !important;
+    padding: 4px !important;
+    font-size: 0.9em !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+/* Стили для таблицы с дежурными */
+.table {
+    margin-top: 20px;
+}
+
+/* Кнопки навигации */
+.fc-button-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.fc-button-primary:not(:disabled):active,
+.fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Заголовок календаря */
+.fc-toolbar-title {
+    font-size: 1.5em;
+}

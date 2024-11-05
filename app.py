@@ -1,3 +1,5 @@
+# app.py
+
 from flask import Flask, render_template, request, jsonify, json
 from datetime import datetime, timezone, timedelta
 from opsgenie_module import get_on_call_schedule
@@ -74,7 +76,6 @@ def index():
     report = get_on_call_report(year, month)
     users = list(report.keys())
     colors = generate_user_colors(users)
-    cal_data = generate_calendar_data(report, year, month, colors)
     month_name = calendar.month_name[month]
 
     if month == 1:
@@ -90,9 +91,8 @@ def index():
     return render_template(
         'index.html',
         users=users,
-        user_stats=report,  # Передаем отсортированный отчет для таблицы
+        user_stats=report,
         colors=colors,
-        cal_data=cal_data,
         month=month,
         year=year,
         month_name=month_name,
@@ -108,21 +108,51 @@ def get_events():
     month = request.args.get("month", type=int)
     if not year or not month:
         return jsonify({"error": "Year and month are required"}), 400
-    
+
     try:
         events_data = get_on_call_report(year, month)
+        users = list(events_data.keys())
+        colors = generate_user_colors(users)
+        holidays = get_cyprus_holidays(year, month)
+
+        # Создаем события дежурств
         events = [
             {
                 "title": user.split('@')[0],
                 "start": datetime.strptime(entry['date'], "%d %B %Y").date().isoformat(),
-                "color": "#a2e8a2" if entry['day_type'].endswith("Weekday") else "#ffa2a2",
+                "color": colors[user],
                 "allDay": True
             }
             for user, user_data in events_data.items()
             for entry in user_data['days']
         ]
-        
-        # Создаем summary_data и сортируем его по имени пользователя
+
+        # Добавляем события праздников
+        for holiday_date, holiday_name in holidays.items():
+            if holiday_date.month == month:
+                events.append({
+                    "title": holiday_name,
+                    "start": holiday_date.isoformat(),
+                    "allDay": True,
+                    "display": 'background',
+                    "color": "#ffeaa7",
+                    "className": "holiday"
+                })
+
+        # Создаем day_types для раскрашивания ячеек дней
+        day_types = {}
+        num_days = calendar.monthrange(year, month)[1]
+        for day in range(1, num_days + 1):
+            date_obj = datetime(year, month, day).date()
+            date_str = date_obj.isoformat()
+            if date_obj in holidays:
+                day_types[date_str] = holidays[date_obj]
+            elif date_obj.weekday() >= 5:
+                day_types[date_str] = 'Weekend'
+            else:
+                day_types[date_str] = 'Weekday'
+
+        # Создаем summary_data и сортируем по имени пользователя
         summary_data = sorted(
             [
                 {
@@ -134,9 +164,13 @@ def get_events():
             ],
             key=lambda x: x["user"]
         )
-        
+
         return app.response_class(
-            response=json.dumps({"events": events, "summary": summary_data}, ensure_ascii=False),
+            response=json.dumps({
+                "events": events,
+                "summary": summary_data,
+                "day_types": day_types
+            }, ensure_ascii=False),
             mimetype='application/json'
         )
     except Exception as e:
@@ -148,44 +182,12 @@ def generate_user_colors(users):
     colors = []
     for i in range(num_users):
         hue = i / num_users
-        lightness = 0.7
-        saturation = 0.5
+        lightness = 0.5  # Более насыщенные цвета
+        saturation = 0.7  # Более яркие цвета
         rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
         color = '#%02x%02x%02x' % tuple(int(c * 255) for c in rgb)
         colors.append(color)
     return dict(zip(users, colors))
-
-def generate_calendar_data(report, year, month, colors):
-    num_days = calendar.monthrange(year, month)[1]
-    cal_data = []
-
-    for day in range(1, num_days + 1):
-        date_obj = datetime(year, month, day)
-        weekday_num = (date_obj.weekday() + 1) % 7  # Monday=0, Sunday=6
-        day_info = {
-            'day': day,
-            'weekday_num': weekday_num,
-            'user': None,
-            'color': None,
-            'holiday': None,
-            'weekday': calendar.day_name[date_obj.weekday()]
-        }
-
-        for user, data in report.items():
-            for entry in data['days']:
-                entry_date = datetime.strptime(entry['date'], "%d %B %Y").date()
-                if entry_date == date_obj.date():
-                    day_info['user'] = user
-                    day_info['color'] = colors[user]
-                    if ' - ' in entry['day_type']:
-                        day_type = entry['day_type'].split(' - ')[1]
-                        if day_type != 'Weekday' and day_type != 'Weekend':
-                            day_info['holiday'] = day_type
-                    break
-
-        cal_data.append(day_info)
-
-    return cal_data
 
 if __name__ == '__main__':
     app.run(debug=True)
