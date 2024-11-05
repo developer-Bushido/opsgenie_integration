@@ -5,11 +5,16 @@ from holidays_module import get_cyprus_holidays
 import yaml
 
 def parse_iso_datetime(s):
-    # Parse ISO datetime strings with 'Z' suffix as UTC
     if s.endswith('Z'):
-        return datetime.fromisoformat(s[:-1]).replace(tzinfo=timezone.utc)
-    else:
-        return datetime.fromisoformat(s)
+        s = s[:-1]  # Убираем символ 'Z' для корректной обработки
+    try:
+        # Пробуем парсить ISO формат напрямую
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+    except ValueError:
+        # Если ошибка, обрабатываем вручную
+        if '.' in s:
+            s = s.split('.')[0]  # Убираем дробную часть секунд
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
 
 def get_on_call_report(year, month):
     """
