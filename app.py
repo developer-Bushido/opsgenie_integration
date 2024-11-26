@@ -1,22 +1,34 @@
 # app.py
 
+import os
 from flask import Flask, render_template, request, jsonify, json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from opsgenie_module import get_on_call_schedule
-from holidays_module import get_cyprus_holidays
+from holidays_module import get_holidays
 import calendar
 import colorsys
 from dateutil import parser
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+# Load environment variables from .env file
+load_dotenv()
+
+# Retrieve environment variables
+API_KEY = os.getenv('API_KEY')
+SCHEDULE_ID = os.getenv('SCHEDULE_ID')
+COUNTRY_CODE = os.getenv('COUNTRY_CODE', 'CY')  # Default to 'CY' (Cyprus)
+
+if not API_KEY or not SCHEDULE_ID:
+    raise ValueError("API_KEY and SCHEDULE_ID must be set in the environment variables.")
 
 def parse_iso_datetime(s):
     return parser.isoparse(s)
 
 def get_on_call_report(year, month):
-    schedule = get_on_call_schedule(year, month)
-    holidays = get_cyprus_holidays(year, month)
+    schedule = get_on_call_schedule(API_KEY, SCHEDULE_ID, year, month)
+    holidays = get_holidays(year, month, COUNTRY_CODE)
 
     report = {}
     shift_periods = []
@@ -29,6 +41,7 @@ def get_on_call_report(year, month):
 
     shift_periods.sort(key=lambda x: x['start'])
     num_days = calendar.monthrange(year, month)[1]
+
     for day in range(1, num_days + 1):
         day_time = datetime(year, month, day, 12, 0, 0, tzinfo=timezone.utc)
         assigned_user = None
@@ -62,7 +75,7 @@ def get_on_call_report(year, month):
     for user in report:
         report[user]['days'].sort(key=lambda x: datetime.strptime(x['date'], "%d %B %Y"))
 
-    # Сортируем report по ключу (имени пользователя) в алфавитном порядке
+    # Sort the report by user name
     sorted_report = dict(sorted(report.items()))
 
     return sorted_report
@@ -112,9 +125,9 @@ def get_events():
         events_data = get_on_call_report(year, month)
         users = list(events_data.keys())
         colors = generate_user_colors(users)
-        holidays = get_cyprus_holidays(year, month)
+        holidays = get_holidays(year, month, COUNTRY_CODE)
 
-        # Создаем события дежурств
+        # Create on-call events
         events = [
             {
                 "title": user.split('@')[0],
@@ -126,7 +139,7 @@ def get_events():
             for entry in user_data['days']
         ]
 
-        # Добавляем события праздников
+        # Add holiday events
         for holiday_date, holiday_name in holidays.items():
             if holiday_date.month == month:
                 events.append({
@@ -138,7 +151,7 @@ def get_events():
                     "className": "holiday"
                 })
 
-        # Создаем day_types для раскрашивания ячеек дней
+        # Create day_types for cell coloring
         day_types = {}
         num_days = calendar.monthrange(year, month)[1]
         for day in range(1, num_days + 1):
@@ -151,7 +164,7 @@ def get_events():
             else:
                 day_types[date_str] = 'Weekday'
 
-        # Создаем summary_data и сортируем по имени пользователя
+        # Prepare summary data and sort by user name
         summary_data = sorted(
             [
                 {
@@ -173,7 +186,7 @@ def get_events():
             mimetype='application/json'
         )
     except Exception as e:
-        print(f"Ошибка при получении данных дежурств: {e}")
+        print(f"Error retrieving on-call data: {e}")
         return jsonify({"error": str(e)}), 500
 
 def generate_user_colors(users):
@@ -181,10 +194,10 @@ def generate_user_colors(users):
     colors = []
     for i in range(num_users):
         hue = i / num_users
-        lightness = 0.5  # Более насыщенные цвета
-        saturation = 0.7  # Более яркие цвета
+        lightness = 0.5  # More saturated colors
+        saturation = 0.7  # Brighter colors
         rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
-        color = '#%02x%02x%02x' % tuple(int(c * 255) for c in rgb)
+        color = '#{:02x}{:02x}{:02x}'.format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
         colors.append(color)
     return dict(zip(users, colors))
 

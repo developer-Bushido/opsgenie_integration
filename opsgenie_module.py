@@ -1,24 +1,30 @@
 # opsgenie_module.py
 
-import os
 import requests
 import calendar
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from dateutil import parser
-
-# Load environment variables from .env file
-load_dotenv()
-
-API_KEY = os.getenv('API_KEY')
-SCHEDULE_ID = os.getenv('SCHEDULE_ID')
-
-if not API_KEY or not SCHEDULE_ID:
-    raise ValueError("Environment variables API_KEY and SCHEDULE_ID must be set.")
 
 BASE_URL = 'https://api.opsgenie.com/v2/schedules'
 
-def get_on_call_schedule(year, month):
+def get_on_call_schedule(api_key, schedule_id, year, month):
+    """
+    Retrieves the on-call schedule for a given month from Opsgenie.
+
+    Parameters:
+        api_key (str): The Opsgenie API key for authentication.
+        schedule_id (str): The ID of the Opsgenie schedule.
+        year (int): The year for the schedule.
+        month (int): The month for the schedule.
+
+    Returns:
+        list: A list of periods with on-call information within the specified month.
+
+    Raises:
+        ValueError: If the date range is incorrect.
+        ConnectionError: If there is a network or server error.
+        RuntimeError: For any other unexpected errors.
+    """
     try:
         month_start = datetime(year, month, 1)
         _, num_days = calendar.monthrange(year, month)
@@ -35,14 +41,14 @@ def get_on_call_schedule(year, month):
             'intervalUnit': interval_unit
         }
         headers = {
-            'Authorization': f'GenieKey {API_KEY}'
+            'Authorization': f'GenieKey {api_key}'
         }
-        url = f'{BASE_URL}/{SCHEDULE_ID}/timeline'
+        url = f'{BASE_URL}/{schedule_id}/timeline'
 
         response = requests.get(url, headers=headers, params=params)
 
         if response.status_code == 422:
-            raise ValueError(f"Некорректный временной диапазон. Дата должна быть не ранее 1 года назад и не позднее 2 лет в будущем. Запрошено для {year}-{month}.")
+            raise ValueError(f"Incorrect time range. Date must be no earlier than 1 year ago and no later than 2 years in the future. Requested for {year}-{month}.")
         elif response.status_code != 200:
             raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
 
@@ -63,6 +69,6 @@ def get_on_call_schedule(year, month):
         return filtered_periods
 
     except requests.exceptions.RequestException as e:
-        raise ConnectionError(f"Ошибка сети или сервера: {e}")
+        raise ConnectionError(f"Network or server error: {e}")
     except Exception as e:
-        raise RuntimeError(f"Непредвиденная ошибка: {e}")
+        raise RuntimeError(f"Unexpected error: {e}")
