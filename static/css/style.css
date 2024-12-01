@@ -1,7 +1,7 @@
 /* style.css */
 
-/* General styles */
-body, html {
+/* General Styles */
+html, body {
     background-color: #f9fafb;
     font-family: 'Roboto', sans-serif;
     height: 100%;
@@ -20,52 +20,56 @@ h2 {
     flex: 0 0 auto;
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding: 0;
-}
-
 #summaryTable {
     flex: 0 0 auto;
-    margin: 0 auto 10px auto;
+    margin: 0 auto 10px;
     width: 90%;
 }
 
 #calendar {
     flex: 1 1 auto;
-    margin: 0 auto 10px auto;
+    margin: 0 auto 10px;
     width: 90%;
-    min-height: 0;
     overflow: auto;
+    min-height: 600px;
 }
 
-/* Styles for day cells */
+/* Styles for Day Cells */
 .fc-daygrid-day-frame {
     cursor: pointer;
 }
 
-/* Weekend days */
+/* Header Cells */
 .fc-col-header-cell {
     background-color: #2c3e50 !important;
+    position: relative;
+    z-index: 1;
 }
 
 .fc-col-header-cell-cushion {
     color: #fff;
 }
 
-.fc-day-sat, .fc-day-sun {
+/* Current Day Styling */
+.fc .fc-daygrid-day.fc-day-today {
+    border: 5px solid red !important;
+    box-shadow: 0 0 5px red !important;
+    border-radius: 4px;
+}
+
+/* Weekend Days */
+.fc-day-sat,
+.fc-day-sun {
     background-color: #ffe8a4;
 }
 
-/* Holiday days */
+/* Holiday Days */
 .holiday {
     background-color: #ffe8a4 !important;
     opacity: 1 !important;
 }
 
-/* On-call events */
+/* On-call Events */
 .fc-event {
     border-radius: 4px !important;
     padding: 4px !important;
@@ -74,12 +78,18 @@ h2 {
     border: none !important;
 }
 
-/* Styles for the on-call table */
+.fc .fc-daygrid-event {
+    margin: 1px 0;
+    font-size: 0.75em;
+    padding: 1px 2px !important;
+}
+
+/* Table Styling */
 .table {
     margin-top: 20px;
 }
 
-/* Navigation buttons */
+/* Navigation Buttons */
 .fc-button-primary {
     background-color: #007bff;
     border-color: #007bff;
@@ -91,34 +101,23 @@ h2 {
     border-color: #0056b3;
 }
 
-/* Calendar title */
+/* Calendar Title */
 .fc-toolbar-title {
     font-size: 1.5em;
 }
 
-/* Additional styles */
-
-/* Remove fixed height */
+/* FullCalendar Adjustments */
 .fc {
+    overflow: visible !important;
     height: auto !important;
 }
 
-/* Change overflow */
-.fc-view {
-    overflow: visible !important;
-}
-
+.fc-view,
 .fc-scroller {
     overflow: visible !important;
 }
 
-/* Add box-sizing */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
-
-.fc .fc-daygrid-event {
-    margin: 1px 0;
-    font-size: 0.75em;
-    padding: 1px 2px !important;
+.fc table {
+    border-collapse: separate;
+    border-spacing: 0;
 }
